@@ -10,6 +10,7 @@ export default function Home() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState<'overview' | 'stats' | 'matchups' | 'abilities'>('overview');
   const pokemonList = useCalcStore((state) => state.pokemonList);
   const setPokemonList = useCalcStore((state) => state.setPokemonList);
   const selectedPokemon = useCalcStore((state) => state.selectedPokemon);
@@ -174,6 +175,7 @@ export default function Home() {
           <div className="lg:col-span-2">
             {selectedPokemon ? (
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+                {/* Header */}
                 <div className="flex items-center gap-4 mb-6">
                   {selectedPokemon.sprite && (
                     <img
@@ -198,35 +200,133 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Base Stats */}
-                <div className="mt-8">
-                  <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Base Stats</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    {Object.entries(selectedPokemon.baseStats).map(([stat, value]) => (
-                      <div key={stat} className="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg">
-                        <div className="text-sm font-semibold text-gray-600 dark:text-gray-400 capitalize">
-                          {stat.replace('-', ' ')}
-                        </div>
-                        <div className="text-lg font-bold text-gray-900 dark:text-white">{value}</div>
-                        <div className="w-full bg-gray-300 dark:bg-gray-600 rounded-full h-2 mt-1">
-                          <div
-                            className="h-2 bg-green-500 rounded-full"
-                            style={{ width: `${(value / 255) * 100}%` }}
-                          />
-                        </div>
-                      </div>
-                    ))}
+                {/* Tabs */}
+                <div className="border-b border-gray-200 dark:border-gray-700 mb-6">
+                  <div className="flex gap-6 -mb-px">
+                    <button
+                      onClick={() => setActiveTab('overview')}
+                      className={`px-4 py-3 font-semibold border-b-2 transition-colors ${
+                        activeTab === 'overview'
+                          ? 'border-red-500 text-red-600 dark:text-red-400'
+                          : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                      }`}
+                    >
+                      Overview
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('stats')}
+                      className={`px-4 py-3 font-semibold border-b-2 transition-colors ${
+                        activeTab === 'stats'
+                          ? 'border-red-500 text-red-600 dark:text-red-400'
+                          : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                      }`}
+                    >
+                      Stats
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('matchups')}
+                      className={`px-4 py-3 font-semibold border-b-2 transition-colors ${
+                        activeTab === 'matchups'
+                          ? 'border-red-500 text-red-600 dark:text-red-400'
+                          : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                      }`}
+                    >
+                      Matchups
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('abilities')}
+                      className={`px-4 py-3 font-semibold border-b-2 transition-colors ${
+                        activeTab === 'abilities'
+                          ? 'border-red-500 text-red-600 dark:text-red-400'
+                          : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                      }`}
+                    >
+                      Abilities
+                    </button>
                   </div>
                 </div>
 
-                {/* Type Matchups */}
-                <TypeMatchupTable types={selectedPokemon.types} />
+                {/* Tab Content */}
+                {activeTab === 'overview' && (
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">About</h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                          <p className="text-sm text-gray-600 dark:text-gray-400 font-semibold">ID</p>
+                          <p className="text-lg font-bold text-gray-900 dark:text-white">#{selectedPokemon.id}</p>
+                        </div>
+                        <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                          <p className="text-sm text-gray-600 dark:text-gray-400 font-semibold">Type(s)</p>
+                          <p className="text-lg font-bold text-gray-900 dark:text-white">{selectedPokemon.types.join(', ')}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">Base Stats Summary</h3>
+                      <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                        <div className="space-y-2 text-gray-900 dark:text-white">
+                          <p className="text-sm">HP: <span className="font-bold">{selectedPokemon.baseStats.hp}</span></p>
+                          <p className="text-sm">Total BST: <span className="font-bold">{Object.values(selectedPokemon.baseStats).reduce((a, b) => a + b, 0)}</span></p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'stats' && (
+                  <div>
+                    <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">Base Stats</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      {Object.entries(selectedPokemon.baseStats).map(([stat, value]) => (
+                        <div key={stat} className="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg">
+                          <div className="text-sm font-semibold text-gray-600 dark:text-gray-400 capitalize">
+                            {stat.replace('-', ' ')}
+                          </div>
+                          <div className="text-lg font-bold text-gray-900 dark:text-white">{value}</div>
+                          <div className="w-full bg-gray-300 dark:bg-gray-600 rounded-full h-2 mt-1">
+                            <div
+                              className="h-2 bg-green-500 rounded-full"
+                              style={{ width: `${(value / 255) * 100}%` }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'matchups' && (
+                  <TypeMatchupTable types={selectedPokemon.types} />
+                )}
+
+                {activeTab === 'abilities' && (
+                  <div>
+                    <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">Abilities</h3>
+                    {selectedPokemon.abilities && selectedPokemon.abilities.length > 0 ? (
+                      <div className="space-y-3">
+                          {selectedPokemon.abilities.map((ability) => (
+                            <div key={ability.name} className="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg border border-gray-300 dark:border-gray-600">
+                              <p className="text-lg font-bold text-gray-900 dark:text-white capitalize mb-2">
+                                {ability.name}
+                            </p>
+                              <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                                {ability.description}
+                              </p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500 dark:text-gray-400">No ability data available</p>
+                    )}
+                  </div>
+                )}
 
                 {/* Calculator Controls */}
                 <div className="mt-8">
                   <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Calculate Stats</h3>
                   <p className="text-gray-600 dark:text-gray-400 text-center py-8">
-                    Calculator interface coming soon...
+                    EV/IV Calculator coming soon...
                   </p>
                 </div>
               </div>

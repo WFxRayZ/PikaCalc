@@ -1,3 +1,28 @@
+// Fetch ability description from PokeAPI
+async function fetchAbilityDescription(abilityUrl: string): Promise<string> {
+  try {
+    const res = await fetch(abilityUrl);
+    const data = await res.json();
+    
+    // Find English description
+    const englishEntry = data.effect_entries?.find((entry: any) => entry.language.name === 'en');
+    if (englishEntry?.effect) {
+      return englishEntry.effect;
+    }
+    
+    // Fallback to flavor text
+    const flavorEntry = data.flavor_text_entries?.find((entry: any) => entry.language.name === 'en');
+    if (flavorEntry?.flavor_text) {
+      return flavorEntry.flavor_text;
+    }
+    
+    return 'No description available';
+  } catch (error) {
+    console.error(`Failed to fetch ability description:`, error);
+    return 'No description available';
+  }
+}
+
 // src/lib/api.ts
 import { PokemonBase } from '@/types';
 
@@ -13,7 +38,7 @@ const formatName = (name: string) => {
 
 // Cache key for localStorage
 const POKEMON_CACHE_KEY = 'pikacalc_pokemon_cache';
-const POKEMON_CACHE_VERSION = 'v1';
+const POKEMON_CACHE_VERSION = 'v3';
 
 interface CacheData {
   version: string;
@@ -52,10 +77,20 @@ export function cachePokemon(pokemon: PokemonBase[]): void {
 }
 
 async function fetchPokemonBatch(names: { name: string; url: string }[]): Promise<PokemonBase[]> {
-  const promises = names.map(async (p) => {
+  const promises = names.map(async (p: { name: string; url: string }) => {
     try {
       const res = await fetch(p.url);
       const details = await res.json();
+
+      // Fetch ability descriptions in parallel
+      const abilityPromises = details.abilities
+        .filter((a: any) => !a.is_hidden) // Get non-hidden abilities
+        .map(async (a: any) => ({
+          name: formatName(a.ability.name),
+          description: await fetchAbilityDescription(a.ability.url),
+        }));
+
+      const abilities = await Promise.all(abilityPromises);
 
       return {
         id: details.id,
@@ -70,6 +105,9 @@ async function fetchPokemonBatch(names: { name: string; url: string }[]): Promis
           'special-defense': details.stats[4].base_stat,
           speed: details.stats[5].base_stat,
         },
+        abilities,
+        height: details.height,
+        weight: details.weight,
       };
     } catch (error) {
       console.error(`Failed to fetch ${p.name}:`, error);

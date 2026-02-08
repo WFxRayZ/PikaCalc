@@ -1,3 +1,11 @@
+// Clean TypeScript definitions for the app
+
+// Ability with description
+export interface Ability {
+  name: string;
+  description: string;
+}
+
 // Base Pokemon data from API
 export interface PokemonBase {
   id: number;
@@ -5,7 +13,7 @@ export interface PokemonBase {
   sprite: string;
   types: string[];
   baseStats: BaseStat;
-  abilities?: string[];
+  abilities?: Ability[];
   height?: number;
   weight?: number;
 }
