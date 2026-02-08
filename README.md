@@ -36,3 +36,37 @@ To run this project locally, follow these steps:
 ```bash
 git clone [https://github.com/WFxRayZ/PikaCalc.git](https://github.com/WFxRayZ/PikaCalc.git)
 cd pikacalc
+```
+
+### 2. Install dependencies
+```bash
+npm install
+# or
+yarn install
+```
+
+### 3. Run the development server
+```bash
+npm run dev
+```
+
+Open http://localhost:3000 with your browser to see the result.
+
+# 🤝 Contributing
+This is an open-source project! Contributions are welcome.
+1. Fork the Project
+2. Create your Feature Branch (git checkout -b feature/AmazingFeature)
+3. Commit your Changes (git commit -m 'Add some AmazingFeature')
+4. Push to the Branch (git push origin feature/AmazingFeature)
+5. Open a Pull Request
+
+# ⚠️ Disclaimer & Legal
+PikaCalc is a fan-made, non-profit project.
+
+- **Intellectual Property:** Pokémon, Pokémon character names, and related indicia are trademarks of Nintendo, Creatures Inc., and GAME FREAK inc.
+
+- **Assets:** All Pokémon images and data are retrieved dynamically via PokeAPI.
+
+- **Copyright: This project is not affiliated with, endorsed, sponsored, or specifically approved by Nintendo or The Pokémon Company. No copyright infringement is intended.**
+
+This project is created for educational purposes to demonstrate web development technologies and for personal use by the community.
