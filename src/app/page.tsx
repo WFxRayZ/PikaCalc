@@ -1,65 +1,195 @@
-import Image from "next/image";
+'use client';
+
+import { useEffect, useState, useMemo } from 'react';
+import { useCalcStore } from '@/src/lib/store';
+import { PokemonBase } from '@/types';
 
 export default function Home() {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const pokemonList = useCalcStore((state) => state.pokemonList);
+  const setPokemonList = useCalcStore((state) => state.setPokemonList);
+  const selectedPokemon = useCalcStore((state) => state.selectedPokemon);
+  const setSelectedPokemon = useCalcStore((state) => state.setSelectedPokemon);
+
+  // Filter Pokemon based on search query
+  const filteredPokemon = useMemo(() => {
+    if (!searchQuery.trim()) return pokemonList;
+    
+    const query = searchQuery.toLowerCase();
+    return pokemonList.filter(
+      (p) =>
+        p.name.toLowerCase().includes(query) ||
+        p.id.toString().includes(query) ||
+        p.types.some((t) => t.toLowerCase().includes(query))
+    );
+  }, [pokemonList, searchQuery]);
+
+  useEffect(() => {
+    const fetchInitialPokemon = async () => {
+      try {
+        setLoading(true);
+        // Import getInitialPokemon
+        const { getInitialPokemon, loadRemainingPokemon } = await import('@/src/lib/api');
+        const initialData = await getInitialPokemon(150);
+        setPokemonList(initialData);
+        setError(null);
+        setLoading(false);
+
+        // Load remaining Pokemon in background
+        loadRemainingPokemon(initialData.length, (allPokemon) => {
+          setPokemonList(allPokemon);
+        }).catch((err) => {
+          console.error('Error loading remaining Pokemon:', err);
+        });
+      } catch (err) {
+        setError('Failed to load Pokémon');
+        console.error(err);
+        setLoading(false);
+      }
+    };
+
+    if (pokemonList.length === 0) {
+      fetchInitialPokemon();
+    } else {
+      setLoading(false);
+    }
+  }, [pokemonList.length, setPokemonList]);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-red-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 p-4">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <h1 className="text-4xl font-bold text-center mb-2 text-red-600 dark:text-red-400">PikaCalc</h1>
+        <p className="text-center text-gray-600 dark:text-gray-400 mb-8">Pokémon EV/IV Calculator</p>
+
+        {/* Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Pokemon List */}
+          <div className="lg:col-span-1">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+              <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Pokédex</h2>
+              
+              {/* Search Bar */}
+              <div className="mb-4">
+                <input
+                  type="text"
+                  placeholder="Search by name, ID, or type..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500"
+                />
+              </div>
+
+              {loading ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500 dark:text-gray-400">Loading Pokémon...</p>
+                </div>
+              ) : error ? (
+                <div className="text-center py-8">
+                  <p className="text-red-500">{error}</p>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                    Showing {filteredPokemon.length} of {pokemonList.length}
+                  </p>
+                  {filteredPokemon.map((pokemon: PokemonBase) => (
+                    <button
+                      key={pokemon.id}
+                      onClick={() => setSelectedPokemon(pokemon)}
+                      className={`w-full text-left p-3 rounded-lg transition-colors ${
+                        selectedPokemon?.id === pokemon.id
+                          ? 'bg-red-500 text-white'
+                          : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        {pokemon.sprite && (
+                          <img
+                            src={pokemon.sprite}
+                            alt={pokemon.name}
+                            className="w-8 h-8"
+                          />
+                        )}
+                        <div>
+                          <p className="font-semibold">#{pokemon.id}</p>
+                          <p className="text-sm opacity-75">{pokemon.name}</p>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Calculator */}
+          <div className="lg:col-span-2">
+            {selectedPokemon ? (
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+                <div className="flex items-center gap-4 mb-6">
+                  {selectedPokemon.sprite && (
+                    <img
+                      src={selectedPokemon.sprite}
+                      alt={selectedPokemon.name}
+                      className="w-24 h-24"
+                    />
+                  )}
+                  <div>
+                    <h2 className="text-3xl font-bold text-gray-900 dark:text-white">{selectedPokemon.name}</h2>
+                    <p className="text-gray-500 dark:text-gray-400">#{selectedPokemon.id}</p>
+                    <div className="flex gap-2 mt-2">
+                      {selectedPokemon.types.map((type) => (
+                        <span
+                          key={type}
+                          className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-sm font-medium"
+                        >
+                          {type.charAt(0).toUpperCase() + type.slice(1)}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Base Stats */}
+                <div className="mt-8">
+                  <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Base Stats</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    {Object.entries(selectedPokemon.baseStats).map(([stat, value]) => (
+                      <div key={stat} className="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg">
+                        <div className="text-sm font-semibold text-gray-600 dark:text-gray-400 capitalize">
+                          {stat.replace('-', ' ')}
+                        </div>
+                        <div className="text-lg font-bold text-gray-900 dark:text-white">{value}</div>
+                        <div className="w-full bg-gray-300 dark:bg-gray-600 rounded-full h-2 mt-1">
+                          <div
+                            className="h-2 bg-green-500 rounded-full"
+                            style={{ width: `${(value / 255) * 100}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Calculator Controls */}
+                <div className="mt-8">
+                  <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Calculate Stats</h3>
+                  <p className="text-gray-600 dark:text-gray-400 text-center py-8">
+                    Calculator interface coming soon...
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 text-center py-12">
+                <p className="text-gray-500 dark:text-gray-400 text-lg">Select a Pokémon to view stats and calculate builds</p>
+              </div>
+            )}
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      </div>
     </div>
   );
 }
