@@ -1,17 +1,20 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useCalcStore } from '@/src/lib/store';
+import { getWeaknesses, getResistances, getImmunities, TYPE_COLORS, formatTypeName } from '@/src/lib/typeEffectiveness';
 import { PokemonBase } from '@/types';
 
 export default function Home() {
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const pokemonList = useCalcStore((state) => state.pokemonList);
   const setPokemonList = useCalcStore((state) => state.setPokemonList);
   const selectedPokemon = useCalcStore((state) => state.selectedPokemon);
   const setSelectedPokemon = useCalcStore((state) => state.setSelectedPokemon);
+  const [hasMore, setHasMore] = useState(true);
 
   // Filter Pokemon based on search query
   const filteredPokemon = useMemo(() => {
@@ -31,18 +34,12 @@ export default function Home() {
       try {
         setLoading(true);
         // Import getInitialPokemon
-        const { getInitialPokemon, loadRemainingPokemon } = await import('@/src/lib/api');
+        const { getInitialPokemon } = await import('@/src/lib/api');
         const initialData = await getInitialPokemon(150);
         setPokemonList(initialData);
         setError(null);
         setLoading(false);
-
-        // Load remaining Pokemon in background
-        loadRemainingPokemon(initialData.length, (allPokemon) => {
-          setPokemonList(allPokemon);
-        }).catch((err) => {
-          console.error('Error loading remaining Pokemon:', err);
-        });
+        setHasMore(initialData.length < 1025);
       } catch (err) {
         setError('Failed to load Pokémon');
         console.error(err);
@@ -56,6 +53,46 @@ export default function Home() {
       setLoading(false);
     }
   }, [pokemonList.length, setPokemonList]);
+
+  const handleLoadMore = async () => {
+    if (loadingMore || !hasMore) return;
+
+    try {
+      setLoadingMore(true);
+      const { loadRemainingPokemon } = await import('@/src/lib/api');
+      const allPokemon = await loadRemainingPokemon(pokemonList.length);
+      setPokemonList(allPokemon);
+      setHasMore(allPokemon.length < 1025);
+    } catch (err) {
+      console.error('Error loading more Pokemon:', err);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  // Intersection Observer for auto-load
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loadingMore && !searchQuery) {
+          handleLoadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (sentinelRef.current) {
+      observer.observe(sentinelRef.current);
+    }
+
+    return () => {
+      if (sentinelRef.current) {
+        observer.unobserve(sentinelRef.current);
+      }
+    };
+  }, [hasMore, loadingMore, searchQuery, handleLoadMore]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 p-4">
@@ -91,35 +128,43 @@ export default function Home() {
                   <p className="text-red-500">{error}</p>
                 </div>
               ) : (
-                <div className="space-y-2 max-h-96 overflow-y-auto">
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-                    Showing {filteredPokemon.length} of {pokemonList.length}
+                <div className="flex flex-col h-full">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                    Loaded {pokemonList.length} of 1025 total
                   </p>
-                  {filteredPokemon.map((pokemon: PokemonBase) => (
-                    <button
-                      key={pokemon.id}
-                      onClick={() => setSelectedPokemon(pokemon)}
-                      className={`w-full text-left p-3 rounded-lg transition-colors ${
-                        selectedPokemon?.id === pokemon.id
-                          ? 'bg-red-500 text-white'
-                          : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        {pokemon.sprite && (
-                          <img
-                            src={pokemon.sprite}
-                            alt={pokemon.name}
-                            className="w-8 h-8"
-                          />
-                        )}
-                        <div>
-                          <p className="font-semibold">#{pokemon.id}</p>
-                          <p className="text-sm opacity-75">{pokemon.name}</p>
+                  <div className="space-y-2 max-h-96 overflow-y-auto flex-1">
+                    {filteredPokemon.map((pokemon: PokemonBase) => (
+                      <button
+                        key={pokemon.id}
+                        onClick={() => setSelectedPokemon(pokemon)}
+                        className={`w-full text-left p-3 rounded-lg transition-colors ${
+                          selectedPokemon?.id === pokemon.id
+                            ? 'bg-red-500 text-white'
+                            : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          {pokemon.sprite && (
+                            <img
+                              src={pokemon.sprite}
+                              alt={pokemon.name}
+                              className="w-8 h-8"
+                            />
+                          )}
+                          <div>
+                            <p className="font-semibold">#{pokemon.id}</p>
+                            <p className="text-sm opacity-75">{pokemon.name}</p>
+                          </div>
                         </div>
+                      </button>
+                    ))}
+                    {loadingMore && (
+                      <div className="text-center py-4">
+                        <p className="text-gray-500 dark:text-gray-400">Loading more...</p>
                       </div>
-                    </button>
-                  ))}
+                    )}
+                    <div ref={sentinelRef} className="h-4" />
+                  </div>
                 </div>
               )}
             </div>
@@ -174,6 +219,9 @@ export default function Home() {
                   </div>
                 </div>
 
+                {/* Type Matchups */}
+                <TypeMatchupTable types={selectedPokemon.types} />
+
                 {/* Calculator Controls */}
                 <div className="mt-8">
                   <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Calculate Stats</h3>
@@ -186,6 +234,81 @@ export default function Home() {
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 text-center py-12">
                 <p className="text-gray-500 dark:text-gray-400 text-lg">Select a Pokémon to view stats and calculate builds</p>
               </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Type Matchup Table Component
+function TypeMatchupTable({ types }: { types: string[] }) {
+  const weaknesses = useMemo(() => getWeaknesses(types), [types]);
+  const resistances = useMemo(() => getResistances(types), [types]);
+  const immunities = useMemo(() => getImmunities(types), [types]);
+
+  return (
+    <div className="mt-8">
+      <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Type Matchups</h3>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Weaknesses */}
+        <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border border-red-200 dark:border-red-800">
+          <h4 className="font-bold text-red-700 dark:text-red-300 mb-3">Weak to</h4>
+          <div className="space-y-2">
+            {weaknesses.length > 0 ? (
+              weaknesses.map(({ type, multiplier }) => (
+                <div key={type} className="flex items-center justify-between">
+                  <span className={`px-3 py-1 rounded-full text-white text-sm font-medium ${TYPE_COLORS[type] || 'bg-gray-400'}`}>
+                    {formatTypeName(type)}
+                  </span>
+                  <span className="text-red-700 dark:text-red-300 font-bold">
+                    {multiplier}x
+                  </span>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-500 italic">No weaknesses</p>
+            )}
+          </div>
+        </div>
+
+        {/* Resistances */}
+        <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
+          <h4 className="font-bold text-green-700 dark:text-green-300 mb-3">Resists</h4>
+          <div className="space-y-2">
+            {resistances.length > 0 ? (
+              resistances.map(({ type, multiplier }) => (
+                <div key={type} className="flex items-center justify-between">
+                  <span className={`px-3 py-1 rounded-full text-white text-sm font-medium ${TYPE_COLORS[type] || 'bg-gray-400'}`}>
+                    {formatTypeName(type)}
+                  </span>
+                  <span className="text-green-700 dark:text-green-300 font-bold">
+                    {multiplier}x
+                  </span>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-500 italic">No resistances</p>
+            )}
+          </div>
+        </div>
+
+        {/* Immunities */}
+        <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+          <h4 className="font-bold text-blue-700 dark:text-blue-300 mb-3">Immune to</h4>
+          <div className="space-y-2">
+            {immunities.length > 0 ? (
+              immunities.map((type) => (
+                <div key={type}>
+                  <span className={`px-3 py-1 rounded-full text-white text-sm font-medium ${TYPE_COLORS[type] || 'bg-gray-400'}`}>
+                    {formatTypeName(type)}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-500 italic">No immunities</p>
             )}
           </div>
         </div>
