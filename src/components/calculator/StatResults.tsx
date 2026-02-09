@@ -73,7 +73,7 @@ export default function StatResults({ calculatedStats, baseStats, level }: StatR
               {/* Progress Bar */}
               <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2.5 overflow-hidden">
                 <div
-                  className={`h-full bg-gradient-to-r ${color} transition-all duration-300`}
+                  className={`h-full bg-linear-to-r ${color} transition-all duration-300`}
                   style={{ width: `${Math.min(percentage, 100)}%` }}
                 />
               </div>
@@ -88,7 +88,7 @@ export default function StatResults({ calculatedStats, baseStats, level }: StatR
                       key={i}
                       className={`flex-1 rounded-sm transition-all ${
                         active
-                          ? `bg-gradient-to-r ${color}`
+                          ? `bg-linear-to-r ${color}`
                           : 'bg-gray-300 dark:bg-gray-600'
                       }`}
                       style={{ height: '100%' }}

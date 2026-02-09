@@ -80,7 +80,7 @@ export default function Calculator({ pokemon }: CalculatorProps) {
             <button
               key={key}
               onClick={() => setEVs(spread)}
-              className="px-4 py-3 bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white rounded-lg text-sm font-bold capitalize shadow-md hover:shadow-lg transition-all transform hover:scale-105"
+              className="px-4 py-3 bg-linear-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white rounded-lg text-sm font-bold capitalize shadow-md hover:shadow-lg transition-all transform hover:scale-105"
             >
               {key}
             </button>
@@ -116,7 +116,7 @@ export default function Calculator({ pokemon }: CalculatorProps) {
           <div className="w-full bg-gray-300 dark:bg-gray-600 rounded-full h-3 overflow-hidden">
             <div
               className={`h-full transition-all duration-300 ${
-                remainingEV >= 0 ? 'bg-gradient-to-r from-green-400 to-green-500' : 'bg-gradient-to-r from-red-400 to-red-500'
+                remainingEV >= 0 ? 'bg-linear-to-r from-green-400 to-green-500' : 'bg-linear-to-r from-red-400 to-red-500'
               }`}
               style={{ width: `${Math.min((totalEV / 508) * 100, 100)}%` }}
             />
