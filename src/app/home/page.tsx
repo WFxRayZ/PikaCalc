@@ -76,7 +76,7 @@ export default function LandingPage() {
       <section className="relative px-4 sm:px-6 lg:px-8 py-12 md:py-20">
         <div className="max-w-7xl mx-auto">
           {/* Hero Card with Gradient Background */}
-          <div className="relative bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-500 rounded-3xl shadow-2xl overflow-hidden p-8 md:p-12 lg:p-16">
+          <div className="relative bg-linear-to-r from-purple-600 via-blue-600 to-cyan-500 rounded-3xl shadow-2xl overflow-hidden p-8 md:p-12 lg:p-16">
             
             {/* Pokemon Decorations - Absolute Positioned */}
 
@@ -124,7 +124,7 @@ export default function LandingPage() {
       </section>
 
       {/* Stats Section */}
-      <section className="relative px-4 sm:px-6 lg:px-8 py-12 md:py-16 bg-gradient-to-b from-transparent to-gray-50 dark:to-gray-800">
+      <section className="relative px-4 sm:px-6 lg:px-8 py-12 md:py-16 bg-linear-to-b from-transparent to-gray-50 dark:to-gray-800">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
             {/* Pokemon Card */}

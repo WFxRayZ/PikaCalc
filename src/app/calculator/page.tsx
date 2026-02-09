@@ -61,7 +61,7 @@ export default function CalculatorPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-blue-50 dark:from-gray-900 via-gray-900 to-gray-800 p-4 md:p-6">
+    <div className="min-h-screen bg-linear-to-br from-red-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-12 flex items-center justify-between">
@@ -70,7 +70,7 @@ export default function CalculatorPage() {
               <span className="text-2xl group-hover:-translate-x-1 transition-transform">←</span>
               <span className="text-sm font-bold text-gray-600 dark:text-gray-400 group-hover:text-red-500">Back to Home</span>
             </Link>
-            <h1 className="text-5xl md:text-6xl font-black bg-gradient-to-r from-red-600 to-orange-500 dark:from-red-500 dark:to-orange-400 bg-clip-text text-transparent mb-2">
+            <h1 className="text-5xl md:text-6xl font-black bg-linear-to-r from-red-600 to-orange-500 dark:from-red-500 dark:to-orange-400 bg-clip-text text-transparent mb-2">
               PikaCalc
             </h1>
             <p className="text-lg text-gray-600 dark:text-gray-400 font-semibold">Pokémon EV/IV Calculator & Team Builder</p>

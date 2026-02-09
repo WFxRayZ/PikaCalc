@@ -109,7 +109,7 @@ export default function Pokedex({
                 onClick={() => onSelectPokemon(pokemon)}
                 className={`w-full text-left p-3 rounded-lg transition-all transform hover:scale-102 ${
                   selectedPokemon?.id === pokemon.id
-                    ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg scale-105'
+                    ? 'bg-linear-to-r from-red-500 to-red-600 text-white shadow-lg scale-105'
                     : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white hover:shadow-md'
                 }`}
               >
@@ -125,7 +125,7 @@ export default function Pokedex({
                     <p className="font-bold text-sm">#{pokemon.id.toString().padStart(4, '0')}</p>
                     <p className="text-sm opacity-85">{pokemon.name}</p>
                   </div>
-                  <div className="flex gap-1 flex-shrink-0">
+                  <div className="flex gap-1 shrink-0">
                     {pokemon.types.map((type) => (
                       <span
                         key={type}

@@ -40,7 +40,7 @@ export default function PokemonDetail({ pokemon }: PokemonDetailProps) {
       {/* Pokemon Header */}
       <div className="flex items-center gap-6 mb-8 pb-8 border-b-2 border-gray-200 dark:border-gray-700">
         {pokemon.sprite && (
-          <div className="w-32 h-32 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 rounded-xl p-4 shadow-lg">
+          <div className="w-32 h-32 bg-linear-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 rounded-xl p-4 shadow-lg">
             <img
               src={pokemon.sprite}
               alt={pokemon.name}
@@ -68,8 +68,8 @@ export default function PokemonDetail({ pokemon }: PokemonDetailProps) {
 
       {/* Tabs */}
       <div className="border-b-2 border-gray-200 dark:border-gray-700 mb-6 overflow-x-auto">
-        <div className="flex gap-1 -mb-[2px]">
-          {tabs.map(({ id, label, icon }) => (
+        <div className="flex gap-1 -mb-0.5">
+          {tabs.map(({ id, label }) => (
             <button
               key={id}
               onClick={() => setActiveTab(id)}
@@ -79,7 +79,6 @@ export default function PokemonDetail({ pokemon }: PokemonDetailProps) {
                   : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
               }`}
             >
-              <span className="text-lg">{icon}</span>
               {label}
             </button>
           ))}
@@ -93,11 +92,11 @@ export default function PokemonDetail({ pokemon }: PokemonDetailProps) {
             <div>
               <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Base Information</h3>
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-900/30 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                <div className="bg-linear-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-900/30 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
                   <p className="text-sm text-gray-600 dark:text-gray-400 font-semibold">Pokédex ID</p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">#{pokemon.id}</p>
                 </div>
-                <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-900/30 p-4 rounded-lg border border-purple-200 dark:border-purple-800">
+                <div className="bg-linear-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-900/30 p-4 rounded-lg border border-purple-200 dark:border-purple-800">
                   <p className="text-sm text-gray-600 dark:text-gray-400 font-semibold">Types</p>
                   <p className="text-lg font-bold text-gray-900 dark:text-white">{pokemon.types.join(', ')}</p>
                 </div>
@@ -105,7 +104,7 @@ export default function PokemonDetail({ pokemon }: PokemonDetailProps) {
             </div>
             <div>
               <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Base Stats</h3>
-              <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-900/30 p-6 rounded-lg border border-green-200 dark:border-green-800">
+              <div className="bg-linear-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-900/30 p-6 rounded-lg border border-green-200 dark:border-green-800">
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-bold text-gray-700 dark:text-gray-300">HP</span>
@@ -136,7 +135,7 @@ export default function PokemonDetail({ pokemon }: PokemonDetailProps) {
                     </div>
                     <div className="w-full bg-gray-300 dark:bg-gray-600 rounded-full h-3 overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all"
+                        className="h-full bg-linear-to-r from-blue-400 to-blue-600 transition-all"
                         style={{ width: `${percentage}%` }}
                       />
                     </div>
@@ -157,7 +156,7 @@ export default function PokemonDetail({ pokemon }: PokemonDetailProps) {
             {pokemon.abilities && pokemon.abilities.length > 0 ? (
               <div className="space-y-4">
                 {pokemon.abilities.map((ability) => (
-                  <div key={ability.name} className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 p-4 rounded-lg border-2 border-yellow-200 dark:border-yellow-800">
+                  <div key={ability.name} className="bg-linear-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 p-4 rounded-lg border-2 border-yellow-200 dark:border-yellow-800">
                     <p className="text-lg font-bold text-gray-900 dark:text-white capitalize mb-2">
                       {ability.name}
                     </p>
