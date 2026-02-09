@@ -3,7 +3,8 @@
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { useCalcStore } from '@/src/lib/store';
 import { getWeaknesses, getResistances, getImmunities, TYPE_COLORS, formatTypeName } from '@/src/lib/typeEffectiveness';
-import { PokemonBase } from '@/types';
+import { calculateAllStats, isValidEVs, getRemainingEV, COMMON_EV_SPREADS } from '@/src/lib/calculations';
+import { PokemonBase, EVs, IVs, Nature, NATURES, CalculatedStats } from '@/types';
 
 export default function Home() {
   const [loading, setLoading] = useState(true);
@@ -16,6 +17,40 @@ export default function Home() {
   const selectedPokemon = useCalcStore((state) => state.selectedPokemon);
   const setSelectedPokemon = useCalcStore((state) => state.setSelectedPokemon);
   const [hasMore, setHasMore] = useState(true);
+
+  // Calculator state
+  const [level, setLevel] = useState(50);
+  const [selectedNature, setSelectedNature] = useState<string>('hardy');
+  const [ivs, setIVs] = useState<IVs>({
+    hp: 31,
+    attack: 31,
+    defense: 31,
+    'special-attack': 31,
+    'special-defense': 31,
+    speed: 31,
+  });
+  const [evs, setEVs] = useState<EVs>({
+    hp: 0,
+    attack: 0,
+    defense: 0,
+    'special-attack': 0,
+    'special-defense': 0,
+    speed: 0,
+  });
+  const [evErrors, setEvErrors] = useState<string[]>([]);
+
+  // Calculate stats when inputs change
+  const calculatedStats = useMemo(() => {
+    if (!selectedPokemon) return null;
+    const nature = NATURES[selectedNature];
+    return calculateAllStats(selectedPokemon.baseStats, ivs, evs, level, nature || null);
+  }, [selectedPokemon, level, selectedNature, ivs, evs]);
+
+  // Validate EVs
+  useEffect(() => {
+    const validation = isValidEVs(evs);
+    setEvErrors(validation.errors);
+  }, [evs]);
 
   // Filter Pokemon based on search query
   const filteredPokemon = useMemo(() => {
@@ -96,7 +131,7 @@ export default function Home() {
   }, [hasMore, loadingMore, searchQuery, handleLoadMore]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 p-4">
+    <div className="min-h-screen bg-linear-to-br from-red-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 p-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <h1 className="text-4xl font-bold text-center mb-2 text-red-600 dark:text-red-400">PikaCalc</h1>
@@ -325,9 +360,165 @@ export default function Home() {
                 {/* Calculator Controls */}
                 <div className="mt-8">
                   <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Calculate Stats</h3>
-                  <p className="text-gray-600 dark:text-gray-400 text-center py-8">
-                    EV/IV Calculator coming soon...
-                  </p>
+                  
+                  <div className="space-y-6">
+                    {/* Level Input */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                        Level
+                      </label>
+                      <div className="flex gap-3 items-end">
+                        <div className="flex-1">
+                          <input
+                            type="range"
+                            min="1"
+                            max="100"
+                            value={level}
+                            onChange={(e) => setLevel(Number(e.target.value))}
+                            className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                          />
+                        </div>
+                        <div className="w-20">
+                          <input
+                            type="number"
+                            min="1"
+                            max="100"
+                            value={level}
+                            onChange={(e) => setLevel(Math.min(100, Math.max(1, Number(e.target.value))))}
+                            className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-white text-center font-semibold"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex gap-2 mt-3 text-xs">
+                        <button onClick={() => setLevel(1)} className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-medium">Lv. 1</button>
+                        <button onClick={() => setLevel(50)} className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-medium">Lv. 50</button>
+                        <button onClick={() => setLevel(100)} className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-medium">Lv. 100</button>
+                      </div>
+                    </div>
+
+                    {/* Nature Selection */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Nature</label>
+                      <select
+                        value={selectedNature}
+                        onChange={(e) => setSelectedNature(e.target.value)}
+                        className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white"
+                      >
+                        {Object.entries(NATURES).map(([key]) => (
+                          <option key={key} value={key} className="capitalize">
+                            {key.charAt(0).toUpperCase() + key.slice(1)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* EV Spreads */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        Quick EV Spreads
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {Object.entries(COMMON_EV_SPREADS).map(([key, spread]) => (
+                          <button
+                            key={key}
+                            onClick={() => setEVs(spread)}
+                            className="px-3 py-2 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded text-sm font-medium hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors capitalize"
+                          >
+                            {key}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* IV Inputs */}
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Individual Values (IVs)</h4>
+                      <div className="grid grid-cols-2 gap-3">
+                        {(Object.keys(ivs) as (keyof IVs)[]).map((stat) => (
+                          <div key={stat}>
+                            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 capitalize mb-1">
+                              {stat === 'special-attack' ? 'Sp. Atk' : stat === 'special-defense' ? 'Sp. Def' : stat}
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              max="31"
+                              value={ivs[stat]}
+                              onChange={(e) => setIVs({ ...ivs, [stat]: Math.min(31, Math.max(0, Number(e.target.value))) })}
+                              className="w-full px-2 py-1 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-white text-sm"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                      <button
+                        onClick={() => setIVs({ hp: 31, attack: 31, defense: 31, 'special-attack': 31, 'special-defense': 31, speed: 31 })}
+                        className="mt-2 text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                      >
+                        Max all IVs
+                      </button>
+                    </div>
+
+                    {/* EV Inputs */}
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                        Effort Values (EVs) - Remaining: <span className="text-orange-500 font-bold">{getRemainingEV(evs)}</span>
+                      </h4>
+                      <div className="grid grid-cols-2 gap-3">
+                        {(Object.keys(evs) as (keyof EVs)[]).map((stat) => (
+                          <div key={stat}>
+                            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 capitalize mb-1">
+                              {stat === 'special-attack' ? 'Sp. Atk' : stat === 'special-defense' ? 'Sp. Def' : stat}
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              max="252"
+                              value={evs[stat]}
+                              onChange={(e) => setEVs({ ...evs, [stat]: Math.min(252, Math.max(0, Number(e.target.value))) })}
+                              className="w-full px-2 py-1 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-white text-sm"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                      {evErrors.length > 0 && (
+                        <div className="mt-3 p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded text-red-700 dark:text-red-300 text-sm">
+                          {evErrors.map((error, i) => (
+                            <p key={i}>• {error}</p>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Calculated Stats */}
+                    {calculatedStats && (
+                      <div>
+                        <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Calculated Stats at Level {level}</h4>
+                        <div className="grid grid-cols-2 gap-3">
+                          {(Object.keys(calculatedStats) as (keyof CalculatedStats)[]).map((stat) => {
+                            const base = selectedPokemon?.baseStats[stat] || 0;
+                            const calculated = calculatedStats[stat];
+                            const diff = calculated - base;
+                            return (
+                              <div key={stat} className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/30 dark:to-purple-900/30 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
+                                <div className="flex justify-between items-center mb-1">
+                                  <label className="text-xs font-medium text-gray-600 dark:text-gray-400 capitalize">
+                                    {stat === 'special-attack' ? 'Sp. Atk' : stat === 'special-defense' ? 'Sp. Def' : stat}
+                                  </label>
+                                  <span className="text-xs text-gray-500 dark:text-gray-500">Base {base}</span>
+                                </div>
+                                <div className="flex items-baseline gap-2">
+                                  <span className="text-xl font-bold text-gray-900 dark:text-white">{calculated}</span>
+                                  <span className={`text-sm font-medium ${diff > 0 ? 'text-green-600 dark:text-green-400' : diff < 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-500'}`}>
+                                    {diff > 0 ? '+' : ''}{diff}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             ) : (
