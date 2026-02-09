@@ -21,10 +21,10 @@ export default function LandingPage() {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-12">
-            <Link href="#home" className="text-gray-700 dark:text-gray-300 font-medium hover:text-red-500 transition-colors">
+            <Link href="/home" className="text-gray-700 dark:text-gray-300 font-medium hover:text-red-500 transition-colors">
               Home
             </Link>
-            <Link href="#about" className="text-gray-700 dark:text-gray-300 font-medium hover:text-red-500 transition-colors">
+            <Link href="/home/about" className="text-gray-700 dark:text-gray-300 font-medium hover:text-red-500 transition-colors">
               About
             </Link>
             <Link href="#blog" className="text-gray-700 dark:text-gray-300 font-medium hover:text-red-500 transition-colors">
@@ -34,8 +34,8 @@ export default function LandingPage() {
 
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center gap-4">
-            <Link href="#" className="text-gray-700 dark:text-gray-300 font-medium hover:text-red-500 transition-colors">
-              Login
+            <Link href="/home/about" className="text-gray-700 dark:text-gray-300 font-medium hover:text-red-500 transition-colors">
+              About
             </Link>
             <Link href="/calculator" className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg shadow-md hover:shadow-lg transition-all">
               Get Started
@@ -56,10 +56,10 @@ export default function LandingPage() {
         {/* Mobile Menu */}
         {isMenuOpen && (
           <div className="md:hidden border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-4 space-y-3">
-            <Link href="#" className="block text-gray-700 dark:text-gray-300 font-medium py-2">
+            <Link href="/home" className="block text-gray-700 dark:text-gray-300 font-medium py-2">
               Home
             </Link>
-            <Link href="#" className="block text-gray-700 dark:text-gray-300 font-medium py-2">
+            <Link href="/home/about" className="block text-gray-700 dark:text-gray-300 font-medium py-2">
               About
             </Link>
             <Link href="#" className="block text-gray-700 dark:text-gray-300 font-medium py-2">
